@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Reading Dashboard</title>
+  <style>
+    body {
+      font-family: 'Helvetica Neue', sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 2rem;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      font-size: 2.5rem;
+      margin-bottom: 2rem;
+    }
+    .category {
+      margin-bottom: 2rem;
+    }
+    .category h2 {
+      font-size: 1.5rem;
+      color: #555;
+      border-bottom: 2px solid #ccc;
+      padding-bottom: 0.5rem;
+    }
+    .links {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    .link {
+      background-color: white;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      transition: transform 0.2s ease;
+      text-align: center;
+    }
+    .link:hover {
+      transform: translateY(-3px);
+    }
+    .link a {
+      text-decoration: none;
+      color: #007acc;
+      font-weight: 600;
+    }
+    footer {
+      text-align: center;
+      font-size: 0.85rem;
+      color: #888;
+      margin-top: 4rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>My Reading Dashboard</h1>
+
+  <div class="category">
+    <h2>General News</h2>
+    <div class="links">
+      <div class="link"><a href="https://www.theguardian.com" target="_blank">The Guardian</a></div>
+      <div class="link"><a href="https://www.nytimes.com" target="_blank">NY Times</a></div>
+      <div class="link"><a href="https://www.bbc.com/news" target="_blank">BBC News</a></div>
+      <div class="link"><a href="https://www.aljazeera.com" target="_blank">Al Jazeera</a></div>
+      <div class="link"><a href="https://www.reuters.com" target="_blank">Reuters</a></div>
+      <div class="link"><a href="https://apnews.com" target="_blank">AP News</a></div>
+    </div>
+  </div>
+
+  <div class="category">
+    <h2>Technology</h2>
+    <div class="links">
+      <div class="link"><a href="https://www.wired.com" target="_blank">Wired</a></div>
+      <div class="link"><a href="https://www.theverge.com" target="_blank">The Verge</a></div>
+      <div class="link"><a href="https://www.technologyreview.com" target="_blank">MIT Tech Review</a></div>
+      <div class="link"><a href="https://restofworld.org" target="_blank">Rest of World</a></div>
+      <div class="link"><a href="https://arstechnica.com" target="_blank">Ars Technica</a></div>
+      <div class="link"><a href="https://www.techdirt.com" target="_blank">TechDirt</a></div>
+    </div>
+  </div>
+
+  <div class="category">
+    <h2>Politics & Global Affairs</h2>
+    <div class="links">
+      <div class="link"><a href="https://www.economist.com" target="_blank">The Economist</a></div>
+      <div class="link"><a href="https://www.theatlantic.com" target="_blank">The Atlantic</a></div>
+      <div class="link"><a href="https://www.foreignaffairs.com" target="_blank">Foreign Affairs</a></div>
+      <div class="link"><a href="https://jacobin.com" target="_blank">Jacobin</a></div>
+      <div class="link"><a href="https://www.nationalreview.com" target="_blank">National Review</a></div>
+      <div class="link"><a href="https://prospect.org" target="_blank">The American Prospect</a></div>
+      <div class="link"><a href="https://mondediplo.com" target="_blank">Le Monde Diplomatique</a></div>
+    </div>
+  </div>
+
+  <div class="category">
+    <h2>Science</h2>
+    <div class="links">
+      <div class="link"><a href="https://www.nature.com" target="_blank">Nature</a></div>
+      <div class="link"><a href="https://www.quantamagazine.org" target="_blank">Quanta Magazine</a></div>
+      <div class="link"><a href="https://www.scientificamerican.com" target="_blank">Scientific American</a></div>
+      <div class="link"><a href="https://aeon.co" target="_blank">Aeon</a></div>
+      <div class="link"><a href="https://undark.org" target="_blank">Undark</a></div>
+      <div class="link"><a href="https://www.sciencenews.org" target="_blank">Science News</a></div>
+      <div class="link"><a href="https://theconversation.com" target="_blank">The Conversation</a></div>
+    </div>
+  </div>
+
+  <div class="category">
+    <h2>Environment & Climate</h2>
+    <div class="links">
+      <div class="link"><a href="https://grist.org" target="_blank">Grist</a></div>
+      <div class="link"><a href="https://e360.yale.edu" target="_blank">Yale Environment 360</a></div>
+      <div class="link"><a href="https://insideclimatenews.org" target="_blank">Inside Climate News</a></div>
+    </div>
+  </div>
+
+  <div class="category">
+    <h2>Psychology & Behavior</h2>
+    <div class="links">
+      <div class="link"><a href="https://psyche.co" target="_blank">Psyche</a></div>
+      <div class="link"><a href="https://behavioralscientist.org" target="_blank">Behavioral Scientist</a></div>
+      <div class="link"><a href="https://nautil.us" target="_blank">Nautilus</a></div>
+    </div>
+  </div>
+
+  <div class="category">
+    <h2>Law & Society</h2>
+    <div class="links">
+      <div class="link"><a href="https://www.lawfaremedia.org" target="_blank">Lawfare</a></div>
+      <div class="link"><a href="https://www.brennancenter.org" target="_blank">Brennan Center</a></div>
+      <div class="link"><a href="https://www.justsecurity.org" target="_blank">Just Security</a></div>
+    </div>
+  </div>
+
+  <div class="category">
+    <h2>Culture & Ideas</h2>
+    <div class="links">
+      <div class="link"><a href="https://www.laphamsquarterly.org" target="_blank">Lapham’s Quarterly</a></div>
+      <div class="link"><a href="https://www.publicbooks.org" target="_blank">Public Books</a></div>
+      <div class="link"><a href="https://www.themarginalian.org" target="_blank">The Marginalian</a></div>
+    </div>
+  </div>
+
+  <footer>
+    <p>Created by Tzer Han Tan &mdash; Updated 2025</p>
+  </footer>
+</body>
+</html>
