@@ -3,150 +3,119 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>My Reading Dashboard</title>
+  <title>3D Reading Dashboard</title>
   <style>
-    body {
-      font-family: 'Helvetica Neue', sans-serif;
-      background-color: #f4f4f4;
+    html, body {
       margin: 0;
-      padding: 2rem;
-      color: #333;
+      padding: 0;
+      overflow: hidden;
+      background: #111;
+      font-family: 'Helvetica Neue', sans-serif;
+      color: white;
     }
-    h1 {
-      text-align: center;
-      font-size: 2.5rem;
-      margin-bottom: 2rem;
+    canvas {
+      display: block;
     }
-    .category {
-      margin-bottom: 2rem;
-    }
-    .category h2 {
-      font-size: 1.5rem;
-      color: #555;
-      border-bottom: 2px solid #ccc;
-      padding-bottom: 0.5rem;
-    }
-    .links {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 1rem;
-      margin-top: 1rem;
-    }
-    .link {
-      background-color: white;
-      padding: 1rem;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      transition: transform 0.2s ease;
-      text-align: center;
-    }
-    .link:hover {
-      transform: translateY(-3px);
-    }
-    .link a {
-      text-decoration: none;
-      color: #007acc;
+    .label {
+      position: absolute;
+      color: white;
+      font-size: 14px;
       font-weight: 600;
-    }
-    footer {
       text-align: center;
-      font-size: 0.85rem;
-      color: #888;
-      margin-top: 4rem;
+      pointer-events: auto;
+      padding: 0.3rem 0.6rem;
+      background: rgba(0,0,0,0.6);
+      border-radius: 6px;
+      transition: transform 0.2s;
+    }
+    .label:hover {
+      transform: scale(1.1);
+      background: rgba(0,0,0,0.85);
     }
   </style>
 </head>
 <body>
-  <h1>My Reading Dashboard</h1>
+  <canvas id="sphereCanvas"></canvas>
 
-  <div class="category">
-    <h2>General News</h2>
-    <div class="links">
-      <div class="link"><a href="https://www.theguardian.com" target="_blank">The Guardian</a></div>
-      <div class="link"><a href="https://www.nytimes.com" target="_blank">NY Times</a></div>
-      <div class="link"><a href="https://www.bbc.com/news" target="_blank">BBC News</a></div>
-      <div class="link"><a href="https://www.aljazeera.com" target="_blank">Al Jazeera</a></div>
-      <div class="link"><a href="https://www.reuters.com" target="_blank">Reuters</a></div>
-      <div class="link"><a href="https://apnews.com" target="_blank">AP News</a></div>
-    </div>
-  </div>
+  <script>
+    const sites = [
+      { name: "The Guardian", url: "https://www.theguardian.com" },
+      { name: "NY Times", url: "https://www.nytimes.com" },
+      { name: "BBC News", url: "https://www.bbc.com/news" },
+      { name: "Al Jazeera", url: "https://www.aljazeera.com" },
+      { name: "Reuters", url: "https://www.reuters.com" },
+      { name: "AP News", url: "https://apnews.com" },
+      { name: "Wired", url: "https://www.wired.com" },
+      { name: "The Verge", url: "https://www.theverge.com" },
+      { name: "MIT Tech Review", url: "https://www.technologyreview.com" },
+      { name: "Rest of World", url: "https://restofworld.org" },
+      { name: "Ars Technica", url: "https://arstechnica.com" },
+      { name: "TechDirt", url: "https://www.techdirt.com" },
+      { name: "The Economist", url: "https://www.economist.com" },
+      { name: "The Atlantic", url: "https://www.theatlantic.com" },
+      { name: "Foreign Affairs", url: "https://www.foreignaffairs.com" },
+      { name: "Jacobin", url: "https://jacobin.com" },
+      { name: "National Review", url: "https://www.nationalreview.com" },
+      { name: "The American Prospect", url: "https://prospect.org" },
+      { name: "Nature", url: "https://www.nature.com" },
+      { name: "Quanta", url: "https://www.quantamagazine.org" },
+      { name: "Scientific American", url: "https://www.scientificamerican.com" },
+      { name: "Aeon", url: "https://aeon.co" },
+      { name: "Undark", url: "https://undark.org" },
+      { name: "Science News", url: "https://www.sciencenews.org" },
+      { name: "The Conversation", url: "https://theconversation.com" }
+    ];
 
-  <div class="category">
-    <h2>Technology</h2>
-    <div class="links">
-      <div class="link"><a href="https://www.wired.com" target="_blank">Wired</a></div>
-      <div class="link"><a href="https://www.theverge.com" target="_blank">The Verge</a></div>
-      <div class="link"><a href="https://www.technologyreview.com" target="_blank">MIT Tech Review</a></div>
-      <div class="link"><a href="https://restofworld.org" target="_blank">Rest of World</a></div>
-      <div class="link"><a href="https://arstechnica.com" target="_blank">Ars Technica</a></div>
-      <div class="link"><a href="https://www.techdirt.com" target="_blank">TechDirt</a></div>
-    </div>
-  </div>
+    const canvas = document.getElementById("sphereCanvas");
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 
-  <div class="category">
-    <h2>Politics & Global Affairs</h2>
-    <div class="links">
-      <div class="link"><a href="https://www.economist.com" target="_blank">The Economist</a></div>
-      <div class="link"><a href="https://www.theatlantic.com" target="_blank">The Atlantic</a></div>
-      <div class="link"><a href="https://www.foreignaffairs.com" target="_blank">Foreign Affairs</a></div>
-      <div class="link"><a href="https://jacobin.com" target="_blank">Jacobin</a></div>
-      <div class="link"><a href="https://www.nationalreview.com" target="_blank">National Review</a></div>
-      <div class="link"><a href="https://prospect.org" target="_blank">The American Prospect</a></div>
-      <div class="link"><a href="https://mondediplo.com" target="_blank">Le Monde Diplomatique</a></div>
-    </div>
-  </div>
+    const center = { x: canvas.width / 2, y: canvas.height / 2 };
+    const radius = Math.min(center.x, center.y) * 0.6;
+    const labels = [];
 
-  <div class="category">
-    <h2>Science</h2>
-    <div class="links">
-      <div class="link"><a href="https://www.nature.com" target="_blank">Nature</a></div>
-      <div class="link"><a href="https://www.quantamagazine.org" target="_blank">Quanta Magazine</a></div>
-      <div class="link"><a href="https://www.scientificamerican.com" target="_blank">Scientific American</a></div>
-      <div class="link"><a href="https://aeon.co" target="_blank">Aeon</a></div>
-      <div class="link"><a href="https://undark.org" target="_blank">Undark</a></div>
-      <div class="link"><a href="https://www.sciencenews.org" target="_blank">Science News</a></div>
-      <div class="link"><a href="https://theconversation.com" target="_blank">The Conversation</a></div>
-    </div>
-  </div>
+    sites.forEach((site, i) => {
+      const el = document.createElement("div");
+      el.className = "label";
+      el.innerHTML = `<a href="${site.url}" target="_blank" style="color:white; text-decoration:none;">${site.name}</a>`;
+      document.body.appendChild(el);
+      labels.push({ el, theta: 2 * Math.PI * i / sites.length, phi: Math.PI * (i % 2 ? 1 : 0.5) });
+    });
 
-  <div class="category">
-    <h2>Environment & Climate</h2>
-    <div class="links">
-      <div class="link"><a href="https://grist.org" target="_blank">Grist</a></div>
-      <div class="link"><a href="https://e360.yale.edu" target="_blank">Yale Environment 360</a></div>
-      <div class="link"><a href="https://insideclimatenews.org" target="_blank">Inside Climate News</a></div>
-    </div>
-  </div>
+    let mouseX = 0, mouseY = 0;
+    document.addEventListener("mousemove", e => {
+      mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+      mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+    });
 
-  <div class="category">
-    <h2>Psychology & Behavior</h2>
-    <div class="links">
-      <div class="link"><a href="https://psyche.co" target="_blank">Psyche</a></div>
-      <div class="link"><a href="https://behavioralscientist.org" target="_blank">Behavioral Scientist</a></div>
-      <div class="link"><a href="https://nautil.us" target="_blank">Nautilus</a></div>
-    </div>
-  </div>
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const time = Date.now() * 0.001;
 
-  <div class="category">
-    <h2>Law & Society</h2>
-    <div class="links">
-      <div class="link"><a href="https://www.lawfaremedia.org" target="_blank">Lawfare</a></div>
-      <div class="link"><a href="https://www.brennancenter.org" target="_blank">Brennan Center</a></div>
-      <div class="link"><a href="https://www.justsecurity.org" target="_blank">Just Security</a></div>
-    </div>
-  </div>
+      labels.forEach((label, i) => {
+        const theta = label.theta + mouseX;
+        const phi = label.phi + mouseY + time * 0.1;
 
-  <div class="category">
-    <h2>Culture & Ideas</h2>
-    <div class="links">
-      <div class="link"><a href="https://www.laphamsquarterly.org" target="_blank">Lapham’s Quarterly</a></div>
-      <div class="link"><a href="https://www.publicbooks.org" target="_blank">Public Books</a></div>
-      <div class="link"><a href="https://www.themarginalian.org" target="_blank">The Marginalian</a></div>
-    </div>
-  </div>
+        const x = radius * Math.sin(phi) * Math.cos(theta);
+        const y = radius * Math.sin(phi) * Math.sin(theta);
+        const z = radius * Math.cos(phi);
 
-  <footer>
-    <p>Created by Tzer Han Tan &mdash; Updated 2025</p>
-  </footer>
+        const scale = 0.5 + (z / radius + 1) / 2;
+        const x2d = center.x + x;
+        const y2d = center.y + y;
+
+        label.el.style.transform = `translate(-50%, -50%) scale(${scale})`;
+        label.el.style.left = `${x2d}px`;
+        label.el.style.top = `${y2d}px`;
+        label.el.style.zIndex = Math.floor(z);
+        label.el.style.opacity = scale;
+      });
+
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  </script>
 </body>
 </html>
