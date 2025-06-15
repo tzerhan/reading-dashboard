@@ -3,118 +3,226 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>3D Reading Dashboard</title>
+  <title>Reading Dashboard</title>
   <style>
     html, body {
       margin: 0;
       padding: 0;
       overflow: hidden;
       background: #111;
-      font-family: 'Helvetica Neue', sans-serif;
-      color: white;
-    }
-    canvas {
-      display: block;
+      font-family: "Helvetica Neue", sans-serif;
     }
     .label {
       position: absolute;
-      color: white;
-      font-size: 14px;
-      font-weight: 600;
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      border: 2px solid white;
+      background: black;
+      display: flex;
+      justify-content: center;
+      align-items: center;
       text-align: center;
+      font-size: 12px;
+      font-weight: 600;
+      transition: transform 0.15s, z-index 0s;
       pointer-events: auto;
-      padding: 0.3rem 0.6rem;
-      background: rgba(0,0,0,0.6);
-      border-radius: 6px;
-      transition: transform 0.2s;
+      user-select: none;
+      z-index: 0;
+    }
+    .label a {
+      color: inherit;
+      text-decoration: none;
+      display: inline-block;
+      padding: 0.5em;
     }
     .label:hover {
-      transform: scale(1.1);
-      background: rgba(0,0,0,0.85);
+      transform: scale(1.3);
+      z-index: 1000 !important;
     }
   </style>
 </head>
 <body>
-  <canvas id="sphereCanvas"></canvas>
-
   <script>
-    const sites = [
-      { name: "The Guardian", url: "https://www.theguardian.com" },
-      { name: "NY Times", url: "https://www.nytimes.com" },
-      { name: "BBC News", url: "https://www.bbc.com/news" },
-      { name: "Al Jazeera", url: "https://www.aljazeera.com" },
-      { name: "Reuters", url: "https://www.reuters.com" },
-      { name: "AP News", url: "https://apnews.com" },
-      { name: "Wired", url: "https://www.wired.com" },
-      { name: "The Verge", url: "https://www.theverge.com" },
-      { name: "MIT Tech Review", url: "https://www.technologyreview.com" },
-      { name: "Rest of World", url: "https://restofworld.org" },
-      { name: "Ars Technica", url: "https://arstechnica.com" },
-      { name: "TechDirt", url: "https://www.techdirt.com" },
-      { name: "The Economist", url: "https://www.economist.com" },
-      { name: "The Atlantic", url: "https://www.theatlantic.com" },
-      { name: "Foreign Affairs", url: "https://www.foreignaffairs.com" },
-      { name: "Jacobin", url: "https://jacobin.com" },
-      { name: "National Review", url: "https://www.nationalreview.com" },
-      { name: "The American Prospect", url: "https://prospect.org" },
-      { name: "Nature", url: "https://www.nature.com" },
-      { name: "Quanta", url: "https://www.quantamagazine.org" },
-      { name: "Scientific American", url: "https://www.scientificamerican.com" },
-      { name: "Aeon", url: "https://aeon.co" },
-      { name: "Undark", url: "https://undark.org" },
-      { name: "Science News", url: "https://www.sciencenews.org" },
-      { name: "The Conversation", url: "https://theconversation.com" }
-    ];
+    const categoryColors = {
+      "News": "#1f77b4",
+      "Tech": "#ff7f0e",
+      "Politics": "#2ca02c",
+      "Science": "#d62728",
+      "Environment & Climate": "#17becf",
+      "Psychology & Behavior": "#9467bd",
+      "Law & Society": "#8c564b",
+      "Culture & Ideas": "#e377c2"
+    };
 
-    const canvas = document.getElementById("sphereCanvas");
-    const ctx = canvas.getContext("2d");
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    const categories = {
+      "News": [
+        { name: "The Guardian", url: "https://www.theguardian.com" },
+        { name: "NY Times", url: "https://www.nytimes.com" },
+        { name: "BBC News", url: "https://www.bbc.com/news" },
+        { name: "Al Jazeera", url: "https://www.aljazeera.com" },
+        { name: "Reuters", url: "https://www.reuters.com" },
+        { name: "AP News", url: "https://apnews.com" }
+      ],
+      "Tech": [
+        { name: "Wired", url: "https://www.wired.com" },
+        { name: "The Verge", url: "https://www.theverge.com" },
+        { name: "MIT Tech Review", url: "https://www.technologyreview.com" },
+        { name: "Rest of World", url: "https://restofworld.org" },
+        { name: "Ars Technica", url: "https://arstechnica.com" },
+        { name: "TechDirt", url: "https://www.techdirt.com" }
+      ],
+      "Politics": [
+        { name: "The Economist", url: "https://www.economist.com" },
+        { name: "The Atlantic", url: "https://www.theatlantic.com" },
+        { name: "Foreign Affairs", url: "https://www.foreignaffairs.com" },
+        { name: "Jacobin", url: "https://jacobin.com" },
+        { name: "National Review", url: "https://www.nationalreview.com" },
+        { name: "The American Prospect", url: "https://prospect.org" }
+      ],
+      "Science": [
+        { name: "Nature", url: "https://www.nature.com" },
+        { name: "Quanta Magazine", url: "https://www.quantamagazine.org" },
+        { name: "Scientific American", url: "https://www.scientificamerican.com" },
+        { name: "Aeon", url: "https://aeon.co" },
+        { name: "Undark", url: "https://undark.org" },
+        { name: "Science News", url: "https://www.sciencenews.org" },
+        { name: "The Conversation", url: "https://theconversation.com" }
+      ],
+      "Environment & Climate": [
+        { name: "Grist", url: "https://grist.org" },
+        { name: "Yale Environment 360", url: "https://e360.yale.edu" },
+        { name: "Inside Climate News", url: "https://insideclimatenews.org" }
+      ],
+      "Psychology & Behavior": [
+        { name: "Psyche.co", url: "https://psyche.co" },
+        { name: "Behavioral Scientist", url: "https://behavioralscientist.org" },
+        { name: "Nautilus", url: "https://nautil.us" }
+      ],
+      "Law & Society": [
+        { name: "Lawfare Blog", url: "https://www.lawfaremedia.org" },
+        { name: "Brennan Center", url: "https://www.brennancenter.org" },
+        { name: "Just Security", url: "https://www.justsecurity.org" }
+      ],
+      "Culture & Ideas": [
+        { name: "Lapham’s Quarterly", url: "https://www.laphamsquarterly.org" },
+        { name: "Public Books", url: "https://www.publicbooks.org" },
+        { name: "The Marginalian", url: "https://www.themarginalian.org" }
+      ]
+    };
 
-    const center = { x: canvas.width / 2, y: canvas.height / 2 };
-    const radius = Math.min(center.x, center.y) * 0.6;
-    const labels = [];
+    let labels = [];
+    let mouseX = -9999, mouseY = -9999;
+    let W = window.innerWidth;
+    let H = window.innerHeight;
+    const slowdownRadius = 150;
+    const speedMin = 0.1;
+    const speedMax = 0.3;
+    const RADIUS = 60;
+    const DIAMETER = RADIUS * 2;
 
-    sites.forEach((site, i) => {
-      const el = document.createElement("div");
-      el.className = "label";
-      el.innerHTML = `<a href="${site.url}" target="_blank" style="color:white; text-decoration:none;">${site.name}</a>`;
-      document.body.appendChild(el);
-      labels.push({ el, theta: 2 * Math.PI * i / sites.length, phi: Math.PI * (i % 2 ? 1 : 0.5) });
-    });
+    function init() {
+      labels.forEach(label => label.el.remove());
+      labels = [];
+      W = window.innerWidth;
+      H = window.innerHeight;
+      const placed = [];
 
-    let mouseX = 0, mouseY = 0;
-    document.addEventListener("mousemove", e => {
-      mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
-      mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
-    });
+      Object.entries(categories).forEach(([cat, sites]) => {
+        const color = categoryColors[cat] || "white";
+        sites.forEach(site => {
+          const el = document.createElement("div");
+          el.className = "label";
+          el.style.color = color;
+          el.innerHTML = `<a href="${site.url}" target="_blank">${site.name}</a>`;
+          document.body.appendChild(el);
 
-    function animate() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const time = Date.now() * 0.001;
+          let x, y, overlapping, tries = 0;
+          do {
+            overlapping = false;
+            x = Math.random() * (W - DIAMETER);
+            y = Math.random() * (H - DIAMETER);
+            for (let p of placed) {
+              const dx = (x + RADIUS) - (p.x + RADIUS);
+              const dy = (y + RADIUS) - (p.y + RADIUS);
+              if (dx * dx + dy * dy < DIAMETER * DIAMETER * 1.1) {
+                overlapping = true;
+                break;
+              }
+            }
+            tries++;
+          } while (overlapping && tries < 500);
 
-      labels.forEach((label, i) => {
-        const theta = label.theta + mouseX;
-        const phi = label.phi + mouseY + time * 0.1;
+          const obj = {
+            el, x, y,
+            dx: (Math.random() < 0.5 ? -1 : 1) * (speedMin + Math.random() * (speedMax - speedMin)),
+            dy: (Math.random() < 0.5 ? -1 : 1) * (speedMin + Math.random() * (speedMax - speedMin))
+          };
+          labels.push(obj);
+          placed.push(obj);
+        });
+      });
+    }
 
-        const x = radius * Math.sin(phi) * Math.cos(theta);
-        const y = radius * Math.sin(phi) * Math.sin(theta);
-        const z = radius * Math.cos(phi);
+    function distance(ax, ay, bx, by) {
+      return Math.hypot(ax - bx, ay - by);
+    }
 
-        const scale = 0.5 + (z / radius + 1) / 2;
-        const x2d = center.x + x;
-        const y2d = center.y + y;
+    function updatePositions() {
+      W = window.innerWidth;
+      H = window.innerHeight;
+      labels.forEach(label => {
+        let speedFactor = 1;
+        const cx = label.x + RADIUS;
+        const cy = label.y + RADIUS;
+        const dist = distance(cx, cy, mouseX, mouseY);
+        if (dist < slowdownRadius) speedFactor = dist / slowdownRadius;
 
-        label.el.style.transform = `translate(-50%, -50%) scale(${scale})`;
-        label.el.style.left = `${x2d}px`;
-        label.el.style.top = `${y2d}px`;
-        label.el.style.zIndex = Math.floor(z);
-        label.el.style.opacity = scale;
+        label.x += label.dx * speedFactor;
+        label.y += label.dy * speedFactor;
+
+        if (label.x < 0 || label.x + DIAMETER > W) label.dx *= -1;
+        if (label.y < 0 || label.y + DIAMETER > H) label.dy *= -1;
       });
 
+      for (let i = 0; i < labels.length; i++) {
+        for (let j = i + 1; j < labels.length; j++) {
+          const a = labels[i], b = labels[j];
+          const dx = (a.x + RADIUS) - (b.x + RADIUS);
+          const dy = (a.y + RADIUS) - (b.y + RADIUS);
+          const distSq = dx * dx + dy * dy;
+          const minDist = DIAMETER * 0.85;
+          if (distSq < minDist * minDist) {
+            [a.dx, b.dx] = [b.dx, a.dx];
+            [a.dy, b.dy] = [b.dy, a.dy];
+          }
+        }
+      }
+    }
+
+    function render() {
+      labels.forEach(label => {
+        label.el.style.left = `${label.x + RADIUS}px`;
+        label.el.style.top = `${label.y + RADIUS}px`;
+      });
+    }
+
+    function animate() {
+      updatePositions();
+      render();
       requestAnimationFrame(animate);
     }
 
+    document.addEventListener("mousemove", e => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+    });
+
+    window.addEventListener("resize", () => {
+      init();
+    });
+
+    init();
     animate();
   </script>
 </body>
