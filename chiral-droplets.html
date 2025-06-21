@@ -11,6 +11,7 @@
         - [Report Info: Nonequilibrium Partitioning] -> [Goal: Explain a dynamic process] -> [Viz: Two-panel canvas simulation with a slider] -> [Interaction: Drag slider to change "interfacial tension" and see particle distribution change] -> [Justification: Visually demonstrates the competition between active propulsion and confinement described in the text.] -> [Library: Plain Canvas API]
         - [Report Info: 3D Screw-like Motion] -> [Goal: Illustrate a complex motion simply] -> [Viz: Simple canvas animation of a rotating and translating circle] -> [Interaction: None, it's a demonstrative animation] -> [Justification: Conveys the essence of combined rotation and translation without needing complex 3D graphics.] -> [Library: Plain Canvas API]
         - [Report Info: Tables 2 & 3] -> [Goal: Organize/Compare] -> [Viz: Interactive filterable cards] -> [Interaction: Click buttons to filter model/application types] -> [Justification: Breaks down dense tables into manageable, user-filterable chunks, improving readability and comparison.] -> [Library: Vanilla JS DOM manipulation]
+        - [Report Info: Schematic Request] -> [Goal: Explain an experimental setup] -> [Viz: Two-part schematic using HTML/CSS] -> [Interaction: Static diagram for clarity] -> [Justification: Visually breaks down a complex measurement technique into its core components (setup and reconstruction principle) in a clear, easy-to-understand format.] -> [Library: HTML/Tailwind CSS]
     -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -91,6 +92,37 @@
         .tab-button {
             transition: all 0.3s ease;
         }
+        .lens {
+            background: #bfdbfe;
+            border: 2px solid #60a5fa;
+        }
+        .cylindrical-lens {
+             width: 1rem;
+             height: 4rem;
+             border-radius: 0.5rem;
+        }
+        .objective-lens {
+            width: 4rem;
+            height: 1rem;
+            border-radius: 0.5rem;
+        }
+        .schematic-arrow {
+            position: relative;
+            width: 100%;
+            height: 2px;
+            background-color: #383838;
+        }
+        .schematic-arrow::after {
+            content: '';
+            position: absolute;
+            right: -1px;
+            top: -4px;
+            width: 0;
+            height: 0;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+            border-left: 10px solid #383838;
+        }
     </style>
 </head>
 <body class="antialiased">
@@ -102,8 +134,9 @@
             <div class="hidden md:flex items-center space-x-8">
                 <a href="#introduction" class="nav-link text-gray-600 hover:text-gray-900 font-medium">Introduction</a>
                 <a href="#fundamentals" class="nav-link text-gray-600 hover:text-gray-900 font-medium">Fundamentals</a>
-                <a href="#platform" class="nav-link text-gray-600 hover:text-gray-900 font-medium">Experimental Platform</a>
-                <a href="#dynamics" class="nav-link text-gray-600 hover:text-gray-900 font-medium">Advanced Dynamics</a>
+                <a href="#platform" class="nav-link text-gray-600 hover:text-gray-900 font-medium">Platform</a>
+                <a href="#reconstruction" class="nav-link text-gray-600 hover:text-gray-900 font-medium">3D Imaging</a>
+                <a href="#dynamics" class="nav-link text-gray-600 hover:text-gray-900 font-medium">Dynamics</a>
                 <a href="#applications" class="nav-link text-gray-600 hover:text-gray-900 font-medium">Applications</a>
             </div>
             <div class="md:hidden">
@@ -115,8 +148,9 @@
         <div id="mobile-menu" class="hidden md:hidden px-6 pb-4 space-y-2">
              <a href="#introduction" class="block nav-link text-gray-600 hover:text-gray-900 font-medium">Introduction</a>
              <a href="#fundamentals" class="block nav-link text-gray-600 hover:text-gray-900 font-medium">Fundamentals</a>
-             <a href="#platform" class="block nav-link text-gray-600 hover:text-gray-900 font-medium">Experimental Platform</a>
-             <a href="#dynamics" class="block nav-link text-gray-600 hover:text-gray-900 font-medium">Advanced Dynamics</a>
+             <a href="#platform" class="block nav-link text-gray-600 hover:text-gray-900 font-medium">Platform</a>
+             <a href="#reconstruction" class="block nav-link text-gray-600 hover:text-gray-900 font-medium">3D Imaging</a>
+             <a href="#dynamics" class="block nav-link text-gray-600 hover:text-gray-900 font-medium">Dynamics</a>
              <a href="#applications" class="block nav-link text-gray-600 hover:text-gray-900 font-medium">Applications</a>
         </div>
     </header>
@@ -190,6 +224,84 @@
                 </div>
             </div>
         </section>
+
+        <!-- 3D Reconstruction Schematic -->
+        <section id="reconstruction" class="py-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-800">Capturing Dynamics in 3D</h2>
+                <p class="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">To understand the complex surface fluctuations of these active droplets, we need to see them in three dimensions. This schematic shows a light sheet microscopy setup used to reconstruct the full 3D shape of a droplet over time by "slicing" it with light.</p>
+            </div>
+
+            <div class="content-card p-6 md:p-8">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                    <!-- Left side: Experimental Setup -->
+                    <div class="relative w-full aspect-square border-2 border-gray-200 rounded-lg p-4 flex flex-col justify-center items-center">
+                        <div class="absolute top-2 left-1/2 -translate-x-1/2 text-sm font-semibold text-gray-500">DETECTION PATH</div>
+                        <div class="absolute bottom-2 left-1/2 -translate-x-1/2 text-sm font-semibold text-gray-500">ILLUMINATION PATH</div>
+
+                        <!-- Detection Components -->
+                        <div class="w-full flex justify-center items-center mb-2">
+                            <div class="bg-gray-700 text-white text-xs font-bold p-2 rounded w-24 text-center">sCMOS Camera</div>
+                        </div>
+                        <div class="w-2 h-4 bg-gray-400 mx-auto"></div>
+                        <div class="w-full flex justify-center items-center">
+                            <div class="objective-lens lens"></div>
+                        </div>
+                        <div class="h-4 w-px bg-gray-300 mx-auto"></div>
+
+                        <!-- Main Sample Area -->
+                        <div class="relative w-48 h-48 bg-blue-50 rounded-lg flex justify-center items-center border-2 border-blue-200 p-2" title="PEG Phase">
+                            <div class="absolute w-28 h-28 bg-orange-100 rounded-full border-2 border-orange-300 flex items-center justify-center" title="Dextran Droplet">
+                                <!-- Chiral Particles -->
+                                <div class="absolute top-8 left-8 text-blue-700 text-lg animate-spin">↺</div>
+                                <div class="absolute bottom-6 right-7 text-blue-700 text-lg" style="animation: spin 1.5s linear infinite reverse;">↻</div>
+                                <div class="absolute top-12 right-12 text-blue-700 text-lg animate-spin">↺</div>
+                            </div>
+                            <!-- Light Sheet -->
+                            <div class="absolute w-full h-1 bg-yellow-300/50 border-y border-yellow-400"></div>
+                        </div>
+                        
+                        <!-- Illumination Components -->
+                        <div class="h-4 w-px bg-gray-300 mx-auto"></div>
+                        <div class="w-full flex justify-center items-center">
+                             <div class="cylindrical-lens lens"></div>
+                        </div>
+                        <div class="w-px h-4 bg-gray-300 mx-auto"></div>
+                        <div class="w-full flex justify-center items-center mt-2">
+                             <div class="bg-red-500 text-white text-xs font-bold p-2 rounded w-24 text-center">Laser</div>
+                        </div>
+
+                    </div>
+                    <!-- Right side: Reconstruction Process -->
+                    <div class="text-center flex flex-col justify-center h-full">
+                         <h3 class="font-bold text-xl mb-4">Principle of Reconstruction</h3>
+                         <p class="text-gray-600 mb-8">The light sheet illuminates a thin 2D slice of the fluorescently-labeled droplet. By scanning the sheet vertically (or moving the sample), a stack of 2D images is acquired, which are then computationally assembled into a 3D model.</p>
+                         <div class="flex items-center justify-center space-x-4">
+                             <!-- Stack of 2D Images -->
+                             <div class="relative w-24 h-24">
+                                <div class="absolute top-0 left-0 w-full h-full border-2 border-gray-400 rounded-full bg-orange-100" style="transform: translate(12px, -8px);"></div>
+                                <div class="absolute top-0 left-0 w-full h-full border-2 border-gray-400 rounded-full bg-orange-100" style="transform: translate(6px, -4px);"></div>
+                                <div class="absolute top-0 left-0 w-full h-full border-2 border-gray-500 rounded-full bg-orange-200 flex items-center justify-center">
+                                    <span class="font-bold text-gray-600">2D Slices</span>
+                                </div>
+                             </div>
+                             <!-- Arrow -->
+                             <div class="w-16">
+                                <div class="schematic-arrow"></div>
+                                <p class="text-xs mt-1">Scan & Stack</p>
+                             </div>
+                             <!-- 3D Result -->
+                             <div class="relative w-24 h-24">
+                                 <div class="absolute top-0 left-0 w-full h-full bg-orange-300 rounded-full" style="filter: drop-shadow(5px 5px 5px rgba(0,0,0,0.2));"></div>
+                                 <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 bg-orange-200/50 rounded-full"></div>
+                                 <p class="absolute -bottom-6 left-1/2 -translate-x-1/2 font-bold text-gray-600">3D Model</p>
+                             </div>
+                         </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
 
         <!-- Advanced Dynamics Section -->
         <section id="dynamics" class="py-20">
@@ -467,8 +579,8 @@
                     p.y += p.vy;
 
                     // Wall boundaries
-                    if (p.x < 5 || p.x > p.Canvas.width - 5) p.vx *= -1;
-                    if (p.y < 5 || p.y > p.Canvas.height - 5) p.vy *= -1;
+                    if (p.x < 5 || p.x > pCanvas.width - 5) p.vx *= -1;
+                    if (p.y < 5 || p.y > pCanvas.height - 5) p.vy *= -1;
                     
                     // Interface crossing logic
                     const wantsToCrossToPeg = p.x > interfaceX && p.phase === 'dex';
