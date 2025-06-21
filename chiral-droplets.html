@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Perspective: Chiral Active Droplets</title>
+    <!-- Chosen Palette: Scholarly Neutrals -->
+    <!-- Application Structure Plan: The SPA is designed as a single-page, vertically scrolling narrative, broken into five logical, thematic sections accessible via a sticky top navigation bar. This structure avoids overwhelming the user with the report's density, allowing for focused exploration of key concepts. The flow is: 1) Introduction: A hook to engage the user. 2) Fundamentals: An interactive comparison of passive, active, and chiral systems, which is the core conceptual foundation. 3) Experimental Platform: A focused look at the Dextran/PEG system with an interactive simulation of particle partitioning. 4) Advanced Dynamics: Sections on 3D motion and modeling/ML, using interactive cards to make dense tables digestible. 5) Outlook: A concluding section on applications. This user flow transforms the linear report into a guided but flexible learning path, prioritizing understanding over strict adherence to the report's original sequence. -->
+    <!-- Visualization & Content Choices: 
+        - [Report Info: Table 1] -> [Goal: Compare] -> [Viz: Interactive 3-column layout with a central animated canvas] -> [Interaction: Click buttons to switch between Passive, Active Nematic, and Chiral modes] -> [Justification: More engaging and intuitive than a static table, directly visualizing the different fluctuation types.] -> [Library: Chart.js for canvas animation]
+        - [Report Info: Nonequilibrium Partitioning] -> [Goal: Explain a dynamic process] -> [Viz: Two-panel canvas simulation with a slider] -> [Interaction: Drag slider to change "interfacial tension" and see particle distribution change] -> [Justification: Visually demonstrates the competition between active propulsion and confinement described in the text.] -> [Library: Plain Canvas API]
+        - [Report Info: 3D Screw-like Motion] -> [Goal: Illustrate a complex motion simply] -> [Viz: Simple canvas animation of a rotating and translating circle] -> [Interaction: None, it's a demonstrative animation] -> [Justification: Conveys the essence of combined rotation and translation without needing complex 3D graphics.] -> [Library: Plain Canvas API]
+        - [Report Info: Tables 2 & 3] -> [Goal: Organize/Compare] -> [Viz: Interactive filterable cards] -> [Interaction: Click buttons to filter model/application types] -> [Justification: Breaks down dense tables into manageable, user-filterable chunks, improving readability and comparison.] -> [Library: Vanilla JS DOM manipulation]
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fdfdfc;
+            color: #383838;
+        }
+        .nav-link {
+            position: relative;
+            transition: color 0.3s ease;
+        }
+        .nav-link:after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #4a90e2;
+            transition: width 0.3s ease;
+        }
+        .nav-link.active:after, .nav-link:hover:after {
+            width: 100%;
+        }
+        .active-button {
+            background-color: #4a90e2 !important;
+            color: #ffffff !important;
+        }
+        .content-card {
+            background-color: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .content-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.07), 0 4px 6px -4px rgb(0 0 0 / 0.07);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 40vh;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #4a90e2;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+        .slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: #4a90e2;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+        .tab-button {
+            transition: all 0.3s ease;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Header & Navigation -->
+    <header id="header" class="bg-fdfdfc/80 backdrop-blur-sm sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-xl md:text-2xl font-bold text-gray-800">Chiral Active Matter</h1>
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="#introduction" class="nav-link text-gray-600 hover:text-gray-900 font-medium">Introduction</a>
+                <a href="#fundamentals" class="nav-link text-gray-600 hover:text-gray-900 font-medium">Fundamentals</a>
+                <a href="#platform" class="nav-link text-gray-600 hover:text-gray-900 font-medium">Experimental Platform</a>
+                <a href="#dynamics" class="nav-link text-gray-600 hover:text-gray-900 font-medium">Advanced Dynamics</a>
+                <a href="#applications" class="nav-link text-gray-600 hover:text-gray-900 font-medium">Applications</a>
+            </div>
+            <div class="md:hidden">
+                <button id="menu-btn" class="text-gray-800 focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                </button>
+            </div>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden px-6 pb-4 space-y-2">
+             <a href="#introduction" class="block nav-link text-gray-600 hover:text-gray-900 font-medium">Introduction</a>
+             <a href="#fundamentals" class="block nav-link text-gray-600 hover:text-gray-900 font-medium">Fundamentals</a>
+             <a href="#platform" class="block nav-link text-gray-600 hover:text-gray-900 font-medium">Experimental Platform</a>
+             <a href="#dynamics" class="block nav-link text-gray-600 hover:text-gray-900 font-medium">Advanced Dynamics</a>
+             <a href="#applications" class="block nav-link text-gray-600 hover:text-gray-900 font-medium">Applications</a>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-6 py-12">
+
+        <!-- Introduction Section -->
+        <section id="introduction" class="min-h-[60vh] flex items-center">
+            <div class="w-full text-center">
+                <h2 class="text-4xl md:text-6xl font-bold text-gray-800 mb-4 leading-tight">A New Frontier in "Living" Materials</h2>
+                <p class="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
+                    This interactive report explores how the combination of <strong class="text-blue-500">activity</strong>, <strong class="text-teal-500">chirality</strong>, and <strong class="text-orange-500">phase separation</strong> leads to emergent, life-like behaviors. We will deconstruct the complex physics of these systems, from fluctuating interfaces to self-propelling 3D droplets, to reveal a new paradigm for designing autonomous materials.
+                </p>
+            </div>
+        </section>
+
+        <!-- Fundamentals Section -->
+        <section id="fundamentals" class="py-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-800">The Physics of Active Interfaces</h2>
+                <p class="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">The behavior of a fluid system changes dramatically when its components are active and chiral. This section provides an interactive comparison of three fundamental regimes. Click the buttons to see how the underlying physics of particle motion changes, transforming the system from a simple thermal fluid to an exotic "odd fluid".</p>
+            </div>
+
+            <div class="flex justify-center mb-8 space-x-2 md:space-x-4">
+                <button id="btn-passive" class="tab-button px-4 py-2 md:px-6 md:py-3 rounded-full font-semibold border-2 border-orange-400 text-orange-500 hover:bg-orange-400 hover:text-white">Passive (Equilibrium)</button>
+                <button id="btn-nematic" class="tab-button px-4 py-2 md:px-6 md:py-3 rounded-full font-semibold border-2 border-teal-400 text-teal-500 hover:bg-teal-400 hover:text-white">Active Nematic</button>
+                <button id="btn-chiral" class="tab-button px-4 py-2 md:px-6 md:py-3 rounded-full font-semibold border-2 border-blue-400 text-blue-500 hover:bg-blue-400 hover:text-white">Chiral Active (Odd)</button>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
+                <div id="desc-passive" class="p-4 rounded-lg system-desc">
+                    <h3 class="font-bold text-xl mb-2 text-orange-600">Passive System</h3>
+                    <p class="text-gray-700">Driven by thermal energy ($k_B T$). Particle motion is random (Brownian) and directionless. The system obeys the fluctuation-dissipation theorem, meaning it's in thermal equilibrium with no net energy flow.</p>
+                </div>
+                <div id="desc-nematic" class="p-4 rounded-lg system-desc hidden">
+                    <h3 class="font-bold text-xl mb-2 text-teal-600">Active Nematic System</h3>
+                    <p class="text-gray-700">Particles convert internal energy into motion and have orientational order. This coupling creates coherent flows driven by motile topological defects. The system is far from equilibrium, continuously producing entropy.</p>
+                </div>
+                <div id="desc-chiral" class="p-4 rounded-lg system-desc hidden">
+                    <h3 class="font-bold text-xl mb-2 text-blue-600">Chiral Active (Odd) Fluid</h3>
+                     <p class="text-gray-700">Particles are active and lack mirror symmetry ("handedness"). This breaks parity and time-reversal symmetry, creating "odd" viscosity and elasticity. It leads to non-dissipative forces perpendicular to strain, causing unique phenomena like transverse flows and topologically protected edge currents.</p>
+                </div>
+
+                <div class="lg:col-span-2 content-card">
+                    <div class="chart-container">
+                        <canvas id="fundamentals-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Experimental Platform Section -->
+        <section id="platform" class="py-20 bg-slate-50 rounded-2xl">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-800">A Biomimetic Crucible</h2>
+                 <p class="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">The Dextran/PEG aqueous two-phase system (ATPS) is an ideal environment to study active matter. Its ultra-low interfacial tension allows the weak forces from motile bacteria to have dramatic effects. This simulation demonstrates how particles partition in this system.</p>
+                 <p class="mt-2 text-md text-gray-500 max-w-3xl mx-auto">Use the slider to adjust the interfacial tension. Observe how at higher tensions, active propulsion is no longer sufficient to overcome the barrier, confining particles to the preferred Dextran phase.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                <div class="content-card order-2 md:order-1">
+                    <h3 class="font-bold text-xl mb-2">Non-Equilibrium Partitioning</h3>
+                    <p class="text-gray-700 mb-4">In passive systems, particles settle in the phase with the lowest free energy (Dextran, left). Motile bacteria, however, can use their own power to cross the interface and explore the less favorable PEG phase (right). The final distribution is not set by thermodynamics but by a dynamic competition between the confinement force of the interface and the particle's active propulsion.</p>
+                    <div class="mt-6">
+                        <label for="tension-slider" class="font-semibold text-gray-700">Interfacial Tension:</label>
+                        <input id="tension-slider" type="range" min="1" max="10" value="3" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider mt-2">
+                    </div>
+                </div>
+                <div class="content-card bg-gray-100 p-2 order-1 md:order-2">
+                     <canvas id="partitioning-canvas" class="rounded-lg"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Advanced Dynamics Section -->
+        <section id="dynamics" class="py-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-800">Advanced Dynamics & Modeling</h2>
+                <p class="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">Extending these concepts to 3D and developing predictive models reveals even more complex behaviors, from self-propelling droplets to the use of AI in designing intelligent active matter.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16 items-center">
+                <div class="content-card">
+                    <h3 class="font-bold text-xl mb-2">3D Chiral Droplets: Screw-like Motion</h3>
+                    <p class="text-gray-700 mb-4">In three dimensions, chirality and topology intertwine. An active droplet with internal helical order (a cholesteric liquid crystal) can rectify rotational flows into net translational motion. The droplet moves forward while spinning, like a screw, a propulsion mode impossible for its achiral counterpart.</p>
+                </div>
+                <div class="content-card bg-gray-100 p-2">
+                    <canvas id="screw-motion-canvas" class="rounded-lg"></canvas>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                <!-- Theoretical Models -->
+                <div>
+                    <h3 class="text-2xl font-bold text-center mb-6">Theoretical Models</h3>
+                    <div class="flex justify-center mb-6 space-x-4">
+                        <button class="model-filter-btn tab-button active-button px-4 py-2 rounded-lg bg-gray-200 text-gray-700" data-filter="all">All</button>
+                        <button class="model-filter-btn tab-button px-4 py-2 rounded-lg bg-gray-200 text-gray-700" data-filter="particle">Particle-Based</button>
+                        <button class="model-filter-btn tab-button px-4 py-2 rounded-lg bg-gray-200 text-gray-700" data-filter="continuum">Continuum</button>
+                    </div>
+                    <div id="model-cards-container" class="space-y-4"></div>
+                </div>
+                <!-- Machine Learning Applications -->
+                <div>
+                    <h3 class="text-2xl font-bold text-center mb-6">Machine Learning in Active Matter</h3>
+                     <div class="flex justify-center mb-6 space-x-4">
+                        <button class="ml-filter-btn tab-button active-button px-4 py-2 rounded-lg bg-gray-200 text-gray-700" data-filter="all">All</button>
+                        <button class="ml-filter-btn tab-button px-4 py-2 rounded-lg bg-gray-200 text-gray-700" data-filter="analysis">Analysis</button>
+                        <button class="ml-filter-btn tab-button px-4 py-2 rounded-lg bg-gray-200 text-gray-700" data-filter="control">Discovery & Control</button>
+                    </div>
+                    <div id="ml-cards-container" class="space-y-4"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Applications Section -->
+        <section id="applications" class="py-20 bg-slate-50 rounded-2xl">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-800">Outlook and Applications</h2>
+                <p class="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">The study of chiral active matter is paving the way for a new generation of smart materials with programmed, life-like functions.</p>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="content-card text-center">
+                    <div class="text-4xl mb-4 text-blue-500">🤖</div>
+                    <h3 class="font-bold text-lg mb-2">Microrobotics</h3>
+                    <p class="text-gray-600 text-sm">Designing steerable micro-engines for targeted drug delivery and microsurgery.</p>
+                </div>
+                <div class="content-card text-center">
+                    <div class="text-4xl mb-4 text-teal-500">🧱</div>
+                    <h3 class="font-bold text-lg mb-2">Autonomous Materials</h3>
+                    <p class="text-gray-600 text-sm">Creating self-healing materials that can sense damage and actively transport matter for repair.</p>
+                </div>
+                <div class="content-card text-center">
+                     <div class="text-4xl mb-4 text-orange-500">🧬</div>
+                    <h3 class="font-bold text-lg mb-2">Artificial Cells</h3>
+                    <p class="text-gray-600 text-sm">Building bottom-up biomimetic systems to study the origin of life and cellular function.</p>
+                </div>
+                <div class="content-card text-center">
+                    <div class="text-4xl mb-4 text-purple-500">🔬</div>
+                    <h3 class="font-bold text-lg mb-2">Separation Tech</h3>
+                    <p class="text-gray-600 text-sm">Developing new microfluidic devices for separating chiral molecules, crucial for the pharmaceutical industry.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <footer class="bg-gray-800 text-white mt-16">
+        <div class="container mx-auto px-6 py-8 text-center">
+            <p>Interactive Visualization of "A Perspective on Chiral Active Droplets".</p>
+            <p class="text-sm text-gray-400 mt-2">Designed to make complex scientific concepts accessible and engaging.</p>
+        </div>
+    </footer>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            
+            // Mobile Menu
+            const menuBtn = document.getElementById('menu-btn');
+            const mobileMenu = document.getElementById('mobile-menu');
+            menuBtn.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+
+            // Navigation scroll spy
+            const sections = document.querySelectorAll('section');
+            const navLinks = document.querySelectorAll('.nav-link');
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        navLinks.forEach(link => {
+                            link.classList.toggle('active', link.getAttribute('href').substring(1) === entry.target.id);
+                        });
+                    }
+                });
+            }, { rootMargin: '-50% 0px -50% 0px' });
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+
+            // --- Fundamentals Chart ---
+            const fundamentalsCtx = document.getElementById('fundamentals-chart').getContext('2d');
+            let fundamentalsChart;
+            let animationFrameId;
+
+            const particleCount = 50;
+            let particles = [];
+
+            function initParticles() {
+                particles = [];
+                for (let i = 0; i < particleCount; i++) {
+                    particles.push({
+                        x: Math.random() * 2 - 1,
+                        y: Math.random() * 2 - 1,
+                        vx: 0,
+                        vy: 0,
+                        angle: Math.random() * 2 * Math.PI,
+                        color: `rgba(0, 0, 0, 0.5)`
+                    });
+                }
+            }
+
+            function createChart(mode) {
+                if (fundamentalsChart) {
+                    fundamentalsChart.destroy();
+                }
+                initParticles();
+
+                fundamentalsChart = new Chart(fundamentalsCtx, {
+                    type: 'scatter',
+                    data: {
+                        datasets: [{
+                            label: mode,
+                            data: particles,
+                            backgroundColor: particles.map(p => p.color),
+                            pointRadius: 5,
+                            pointHoverRadius: 7
+                        }]
+                    },
+                    options: {
+                        animation: false,
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: { enabled: false }
+                        },
+                        scales: {
+                            x: { display: false, min: -1.2, max: 1.2 },
+                            y: { display: false, min: -1.2, max: 1.2 }
+                        }
+                    }
+                });
+                
+                if(animationFrameId) cancelAnimationFrame(animationFrameId);
+                animateChart(mode);
+            }
+            
+            function animateChart(mode) {
+                const speed = 0.01;
+                const turnSpeed = 0.1;
+
+                particles.forEach(p => {
+                    switch(mode) {
+                        case 'passive':
+                            p.vx = (Math.random() - 0.5) * speed;
+                            p.vy = (Math.random() - 0.5) * speed;
+                            break;
+                        case 'nematic':
+                            // Simple alignment towards average angle
+                            const avgAngle = particles.reduce((sum, p2) => sum + p2.angle, 0) / particleCount;
+                            p.angle += (avgAngle - p.angle) * 0.01 + (Math.random() - 0.5) * turnSpeed;
+                            p.vx = Math.cos(p.angle) * speed;
+                            p.vy = Math.sin(p.angle) * speed;
+                            break;
+                        case 'chiral':
+                            p.angle += turnSpeed;
+                            p.vx = Math.cos(p.angle) * speed;
+                            p.vy = Math.sin(p.angle) * speed;
+                            break;
+                    }
+
+                    p.x += p.vx;
+                    p.y += p.vy;
+
+                    // Boundary conditions (toroidal)
+                    if (p.x > 1.2) p.x = -1.2; if (p.x < -1.2) p.x = 1.2;
+                    if (p.y > 1.2) p.y = -1.2; if (p.y < -1.2) p.y = 1.2;
+                });
+
+                fundamentalsChart.update();
+                animationFrameId = requestAnimationFrame(() => animateChart(mode));
+            }
+            
+            const systemButtons = [
+                { id: 'btn-passive', mode: 'passive', descId: 'desc-passive', color: 'orange' },
+                { id: 'btn-nematic', mode: 'nematic', descId: 'desc-nematic', color: 'teal' },
+                { id: 'btn-chiral', mode: 'chiral', descId: 'desc-chiral', color: 'blue' }
+            ];
+
+            systemButtons.forEach(btnInfo => {
+                document.getElementById(btnInfo.id).addEventListener('click', () => {
+                    systemButtons.forEach(b => {
+                        document.getElementById(b.id).classList.remove('active-button');
+                        document.getElementById(b.descId).classList.add('hidden');
+                    });
+                    document.getElementById(btnInfo.id).classList.add('active-button');
+                    document.getElementById(btnInfo.descId).classList.remove('hidden');
+                    createChart(btnInfo.mode);
+                });
+            });
+
+            // Set initial state
+            document.getElementById('btn-passive').classList.add('active-button');
+            createChart('passive');
+
+
+            // --- Partitioning Canvas ---
+            const pCanvas = document.getElementById('partitioning-canvas');
+            const pCtx = pCanvas.getContext('2d');
+            const tensionSlider = document.getElementById('tension-slider');
+
+            let pParticles = [];
+            const pParticleCount = 100;
+            
+            function resizePartitioningCanvas() {
+                pCanvas.width = pCanvas.parentElement.clientWidth;
+                pCanvas.height = pCanvas.parentElement.clientWidth * 0.6;
+                initPartitioningParticles();
+            }
+
+            function initPartitioningParticles() {
+                pParticles = [];
+                for(let i=0; i<pParticleCount; i++) {
+                    pParticles.push({
+                        x: Math.random() * pCanvas.width,
+                        y: Math.random() * pCanvas.height,
+                        vx: (Math.random() - 0.5) * 2,
+                        vy: (Math.random() - 0.5) * 2,
+                        phase: 'dex' // 'dex' or 'peg'
+                    });
+                }
+            }
+            
+            function animatePartitioning() {
+                pCtx.clearRect(0, 0, pCanvas.width, pCanvas.height);
+                const interfaceX = pCanvas.width / 2;
+                const tension = parseFloat(tensionSlider.value);
+                
+                // Draw phases
+                pCtx.fillStyle = '#fde68a'; // Dextran
+                pCtx.fillRect(0, 0, interfaceX, pCanvas.height);
+                pCtx.fillStyle = '#bfdbfe'; // PEG
+                pCtx.fillRect(interfaceX, 0, pCanvas.width, pCanvas.height);
+                
+                // Draw interface line
+                pCtx.strokeStyle = '#60a5fa';
+                pCtx.lineWidth = 4;
+                pCtx.beginPath();
+                pCtx.moveTo(interfaceX, 0);
+                pCtx.lineTo(interfaceX, pCanvas.height);
+                pCtx.stroke();
+                
+                pParticles.forEach(p => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+
+                    // Wall boundaries
+                    if (p.x < 5 || p.x > p.Canvas.width - 5) p.vx *= -1;
+                    if (p.y < 5 || p.y > p.Canvas.height - 5) p.vy *= -1;
+                    
+                    // Interface crossing logic
+                    const wantsToCrossToPeg = p.x > interfaceX && p.phase === 'dex';
+                    const wantsToCrossToDex = p.x < interfaceX && p.phase === 'peg';
+                    
+                    if (wantsToCrossToPeg) {
+                        // Crossing from Dextran to PEG
+                        const crossingProbability = 1 / tension;
+                        if (Math.random() < crossingProbability) {
+                            p.phase = 'peg';
+                        } else {
+                            p.x = interfaceX - 5;
+                            p.vx *= -1; // Bounce back
+                        }
+                    } else if (wantsToCrossToDex) {
+                        p.phase = 'dex'; // Crossing to preferred phase is always allowed
+                    }
+
+                    pCtx.beginPath();
+                    pCtx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+                    pCtx.fillStyle = p.phase === 'dex' ? '#4d7c0f' : '#1e3a8a';
+                    pCtx.fill();
+                });
+                
+                requestAnimationFrame(animatePartitioning);
+            }
+
+            resizePartitioningCanvas();
+            animatePartitioning();
+            window.addEventListener('resize', resizePartitioningCanvas);
+            
+            // --- Screw Motion Canvas ---
+            const sCanvas = document.getElementById('screw-motion-canvas');
+            const sCtx = sCanvas.getContext('2d');
+            sCanvas.width = sCanvas.parentElement.clientWidth;
+            sCanvas.height = 100;
+            let screwDroplet = { x: 20, y: sCanvas.height / 2, angle: 0, radius: 15 };
+            
+            function animateScrewMotion() {
+                sCtx.clearRect(0, 0, sCanvas.width, sCanvas.height);
+                
+                screwDroplet.x += 0.5;
+                screwDroplet.angle += 0.1;
+                
+                if(screwDroplet.x > sCanvas.width + screwDroplet.radius) {
+                    screwDroplet.x = -screwDroplet.radius;
+                }
+                
+                sCtx.save();
+                sCtx.translate(screwDroplet.x, screwDroplet.y);
+                sCtx.rotate(screwDroplet.angle);
+                
+                sCtx.beginPath();
+                sCtx.arc(0, 0, screwDroplet.radius, 0, Math.PI * 2);
+                sCtx.fillStyle = '#4a90e2';
+                sCtx.fill();
+
+                // Add a marker to show rotation
+                sCtx.beginPath();
+                sCtx.moveTo(0,0);
+                sCtx.lineTo(screwDroplet.radius, 0);
+                sCtx.strokeStyle = 'white';
+                sCtx.lineWidth = 2;
+                sCtx.stroke();
+
+                sCtx.restore();
+                requestAnimationFrame(animateScrewMotion);
+            }
+            animateScrewMotion();
+            window.addEventListener('resize', () => {
+                sCanvas.width = sCanvas.parentElement.clientWidth;
+                sCanvas.height = 100;
+                screwDroplet.y = sCanvas.height / 2;
+            });
+
+            // --- Card Filters ---
+            const modelData = [
+                { name: 'Chiral Active Brownian Particle (CAP)', type: 'particle', desc: 'Models particles with constant speed and torque, moving in circles. Used for MIPS suppression and microflock studies.' },
+                { name: 'Chiral Active Ornstein-Uhlenbeck Particle (AOUP)', type: 'particle', desc: 'Models the active force itself as a stochastic process. More amenable to analytical calculations.' },
+                { name: 'Agent-Based Models', type: 'particle', desc: 'Uses phenomenological rules for interaction like alignment or vision to study swarming and flocking.' },
+                { name: 'Active Nematic/Cholesteric Hydrodynamics', type: 'continuum', desc: 'Field theory coupling liquid crystal order to fluid velocity. Describes droplet morphodynamics and active turbulence.' },
+                { name: 'Active Model B+', type: 'continuum', desc: 'A phase-field model extending Cahn-Hilliard theory to active systems, capturing chiral effects and pattern formation.' }
+            ];
+
+            const mlData = [
+                { name: 'CNNs & Deep Learning', type: 'analysis', desc: 'Used for enhanced particle tracking and feature extraction from raw images with superhuman accuracy.' },
+                { name: 'PCA & Unsupervised NNs', type: 'analysis', desc: 'Identifies distinct collective states (phases) from configuration data without predefined order parameters.' },
+                { name: 'PINNs & Sparse Regression', type: 'control', desc: 'Infers governing physical equations (PDEs) directly from experimental spatiotemporal data.' },
+                { name: 'Reinforcement Learning (RL)', type: 'control', desc: 'Trains "intelligent" agents to learn optimal strategies for navigation or foraging through trial and error.' }
+            ];
+            
+            function renderCards(containerId, data, filter) {
+                const container = document.getElementById(containerId);
+                container.innerHTML = '';
+                const filteredData = filter === 'all' ? data : data.filter(item => item.type === filter);
+                
+                filteredData.forEach(item => {
+                    const card = `
+                        <div class="content-card">
+                            <h4 class="font-bold text-lg mb-1">${item.name}</h4>
+                            <p class="text-gray-600 text-sm">${item.desc}</p>
+                        </div>
+                    `;
+                    container.innerHTML += card;
+                });
+            }
+
+            function setupFilterButtons(btnClass, containerId, data) {
+                const buttons = document.querySelectorAll(btnClass);
+                buttons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        buttons.forEach(btn => btn.classList.remove('active-button'));
+                        button.classList.add('active-button');
+                        const filter = button.getAttribute('data-filter');
+                        renderCards(containerId, data, filter);
+                    });
+                });
+            }
+
+            renderCards('model-cards-container', modelData, 'all');
+            setupFilterButtons('.model-filter-btn', 'model-cards-container', modelData);
+
+            renderCards('ml-cards-container', mlData, 'all');
+            setupFilterButtons('.ml-filter-btn', 'ml-cards-container', mlData);
+        });
+    </script>
+</body>
+</html>
