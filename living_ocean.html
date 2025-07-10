@@ -308,7 +308,7 @@
             }
 
             function animateVicsek() {
-                const noiseLevel = (1 - parseFloat(noiseSlider.value)) * Math.PI;
+                const noiseLevel = (1 - parseFloat(noiseSlider.value)) * Math.PI * 0.2;
 
                 vCtx.fillStyle = 'rgba(26, 59, 93, 0.25)'; // Fading effect
                 vCtx.fillRect(0, 0, vCanvas.width, vCanvas.height);
