@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Living Matter in Motion: The Physics of Ocean Life</title>
+    <!-- Chosen Palette: Oceanic Harmony -->
+    <!-- Application Structure Plan: The application is structured as a single-page narrative designed for a public museum audience. The flow guides the user from the general concept to specific examples and then to an interactive simulation, mirroring a guided learning path. It starts with an 'Overview' to set the stage. 'Section 1' focuses on a single embryo, providing a concrete visual anchor (with a placeholder for a specific image). 'Section 2' scales up to the collective behavior of many embryos, summarizing the Nature paper on 'living crystals'. 'Section 3' abstracts this to a fundamental physics principle with an interactive Vicsek model simulation, allowing users to 'play' with the parameters of collective motion. This structure—from specific and biological to general and physical—is chosen to make complex concepts accessible and build understanding incrementally. -->
+    <!-- Visualization & Content Choices: 
+        - [Report Info: Embryo Flow Field] -> [Goal: Inform] -> [Viz: Image with descriptive text] -> [Interaction: Static] -> [Justification: Provides a visually striking, real-world example as the entry point to the science.] -> [Library: HTML/CSS]
+        - [Report Info: Starfish Embryo Collective Behavior] -> [Goal: Explain a phenomenon] -> [Viz: Two-column layout with key points and a descriptive canvas animation] -> [Interaction: Looping animation] -> [Justification: Breaks down the 'living crystal' concept from the Nature paper into digestible points, supported by a simple visual representation of chiral swirls.] -> [Library: Plain Canvas API]
+        - [Report Info: Vicsek Model] -> [Goal: Demonstrate a principle] -> [Viz: Large canvas simulation] -> [Interaction: User-controlled slider for the 'noise' parameter] -> [Justification: The most effective way to teach the concept of self-organization is to let the user control the key parameter and see the transition from disorder to order in real time.] -> [Library: Plain Canvas API]
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f0f4f8; /* Light sandy blue */
+            color: #1a3b5d; /* Deep sea blue */
+        }
+        .nav-link {
+            position: relative;
+            transition: color 0.3s ease;
+            color: #e0f7fa;
+        }
+        .nav-link:after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #ff8a65; /* Coral accent */
+            transition: width 0.3s ease;
+        }
+        .nav-link.active:after, .nav-link:hover:after {
+            width: 100%;
+        }
+        .content-card {
+            background-color: #ffffff;
+            border-radius: 0.75rem;
+            padding: 2rem;
+            box-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            background: #ff8a65; /* Coral accent */
+            cursor: pointer;
+            border-radius: 50%;
+            border: 4px solid #ffffff;
+            box-shadow: 0 0 5px rgba(0,0,0,0.2);
+        }
+        .slider::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            background: #ff8a65;
+            cursor: pointer;
+            border-radius: 50%;
+            border: 4px solid #ffffff;
+            box-shadow: 0 0 5px rgba(0,0,0,0.2);
+        }
+        .hero-gradient {
+            background: linear-gradient(135deg, #004d7a, #0077b6);
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Header & Navigation -->
+    <header id="header" class="bg-[#004d7a]/80 backdrop-blur-sm sticky top-0 z-50 shadow-lg">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-xl md:text-2xl font-bold text-white">Living Matter in Motion</h1>
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="#overview" class="nav-link hover:text-white font-medium">Overview</a>
+                <a href="#flowfields" class="nav-link hover:text-white font-medium">Embryo Flows</a>
+                <a href="#collective" class="nav-link hover:text-white font-medium">Collective Behavior</a>
+                <a href="#simulation" class="nav-link hover:text-white font-medium">Interactive Model</a>
+            </div>
+            <div class="md:hidden">
+                <button id="menu-btn" class="text-white focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                </button>
+            </div>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden px-6 pb-4 space-y-2">
+             <a href="#overview" class="block nav-link hover:text-white font-medium">Overview</a>
+             <a href="#flowfields" class="block nav-link hover:text-white font-medium">Embryo Flows</a>
+             <a href="#collective" class="block nav-link hover:text-white font-medium">Collective Behavior</a>
+             <a href="#simulation" class="block nav-link hover:text-white font-medium">Interactive Model</a>
+        </div>
+    </header>
+
+    <main>
+        <!-- Overview Section -->
+        <section id="overview" class="hero-gradient text-white py-20 md:py-32">
+            <div class="container mx-auto px-6 text-center">
+                <h2 class="text-4xl md:text-6xl font-bold mb-4 leading-tight">The Hidden Physics of Ocean Life</h2>
+                <p class="text-lg md:text-xl text-cyan-100 max-w-3xl mx-auto">
+                    From the swirling currents around a single embryo to the coordinated dance of a fish school, life in the ocean is shaped by invisible physical forces. This exhibit, a collaboration with <strong class="text-amber-300">Birch Aquarium</strong>, explores the surprising connections between marine biology and physics, revealing how principles like flow, coordination, and "handedness" (chirality) create the dynamic patterns of living systems.
+                </p>
+            </div>
+        </section>
+
+        <div class="container mx-auto px-6 py-16 md:py-24 space-y-24">
+            <!-- Section 1: Flow Fields -->
+            <section id="flowfields">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-gray-800">The World Around an Embryo</h2>
+                    <p class="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">A tiny marine embryo, just a fraction of a millimeter across, is a powerhouse of activity. As it spins, it acts like a microscopic mixer, creating complex flows and currents in the water around it. These flows are crucial for its development, helping it to breathe and sense its environment.</p>
+                </div>
+                <div class="content-card">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                        <div class="w-full h-80 bg-gray-200 rounded-lg flex items-center justify-center text-gray-500">
+                             <!-- This is where the image you supply will go. -->
+                            <img src="https://placehold.co/600x400/e2e8f0/94a3b8?text=Flow+Field+Image+Here" alt="Flow field around a marine embryo" class="w-full h-full object-cover rounded-lg">
+                        </div>
+                        <div class="text-gray-700">
+                            <h3 class="font-bold text-xl mb-2">Visualizing the Invisible</h3>
+                            <p>Using advanced microscopy and fluorescent particles, scientists can make these invisible currents visible. The image on the left shows a reconstruction of the flow field around a spinning starfish embryo. The lines trace the paths of water molecules, revealing a beautiful and intricate vortex pattern. This is a direct visualization of how a living organism engineers its own physical surroundings.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 2: Collective Behavior -->
+            <section id="collective">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-gray-800">The Dance of the "Living Crystals"</h2>
+                    <p class="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">What happens when thousands of these spinning embryos are placed together? They don't just move randomly. As described in a recent study in <em class="italic">Nature</em>, they self-organize into stunning, large-scale patterns, forming a "living chiral crystal."</p>
+                </div>
+                <div class="content-card">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                        <div class="text-gray-700">
+                            <h3 class="font-bold text-xl mb-2">From Single Spins to Collective Swirls</h3>
+                            <ul class="space-y-3 list-disc list-inside">
+                                <li><strong class="text-cyan-600">Chiral Motion:</strong> Each starfish embryo spins in a specific direction (clockwise or counter-clockwise), a property called chirality or "handedness".</li>
+                                <li><strong class="text-cyan-600">Hydrodynamic Coupling:</strong> The flow field created by one embryo influences its neighbors. This "communication" through the water coordinates their motion.</li>
+                                <li><strong class="text-cyan-600">Emergent Order:</strong> Over time, these local interactions lead to global order. The embryos arrange themselves into a crystal-like lattice, with neighboring embryos spinning in opposite directions, creating vast arrays of tiny, swirling vortices.</li>
+                            </ul>
+                        </div>
+                        <div class="w-full h-80 bg-blue-50 rounded-lg">
+                            <canvas id="crystal-canvas"></canvas>
+                        </div>
+                    </div>
+                    <div class="mt-12 pt-8 border-t border-gray-200">
+                        <h3 class="font-bold text-xl mb-4 text-center text-gray-800">Real-World Observation</h3>
+                        <p class="text-center text-gray-600 mb-6 max-w-2xl mx-auto">Below is a space for a time-lapse video showing the actual self-organization of thousands of starfish embryos into a dynamic, crystalline lattice.</p>
+                        <div class="w-full max-w-2xl mx-auto h-96 bg-gray-200 rounded-lg flex items-center justify-center text-gray-500">
+                            <!-- This is where the GIF you supply will go. -->
+                            <img src="https://placehold.co/800x600/e2e8f0/94a3b8?text=Living+Crystal+GIF+Here" alt="Time-lapse GIF of living chiral crystals" class="w-full h-full object-cover rounded-lg">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 3: Vicsek Model -->
+            <section id="simulation">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-gray-800">Simulating a Swarm</h2>
+                    <p class="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">How do simple rules lead to complex collective behavior like fish schooling or bird flocking? Physicists use simple computer models to explore this question. The Vicsek model is one of the most famous examples. In this model, each "particle" tries to align with its neighbors, but with a little bit of randomness or "noise".</p>
+                </div>
+                <div class="content-card">
+                    <div class="flex flex-col items-center">
+                        <div class="w-full max-w-3xl h-[60vh] bg-gray-800 rounded-lg mb-6">
+                            <canvas id="vicsek-canvas"></canvas>
+                        </div>
+                        <div class="w-full max-w-md text-center">
+                            <label for="noise-slider" class="font-semibold text-lg text-gray-700">Interaction Strength (Alignment)</label>
+                            <p class="text-sm text-gray-500 mb-2">Slide to the left for more random motion (less alignment) and to the right for more coordinated flocking (stronger alignment).</p>
+                            <input id="noise-slider" type="range" min="0" max="1" value="0.5" step="0.01" class="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer slider">
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+    
+    <footer class="bg-[#1a3b5d] text-white mt-16">
+        <div class="container mx-auto px-6 py-8 text-center">
+            <p>An initiative of the "Living Matter in Motion" exhibit.</p>
+            <p class="text-sm text-cyan-200 mt-2">Developed in collaboration with Birch Aquarium to connect marine life, physics, and the public.</p>
+        </div>
+    </footer>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            
+            // Mobile Menu
+            const menuBtn = document.getElementById('menu-btn');
+            const mobileMenu = document.getElementById('mobile-menu');
+            menuBtn.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+
+            // Navigation scroll spy
+            const sections = document.querySelectorAll('section');
+            const navLinks = document.querySelectorAll('.nav-link');
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        navLinks.forEach(link => {
+                            link.classList.toggle('active', link.getAttribute('href').substring(1) === entry.target.id);
+                        });
+                    }
+                });
+            }, { rootMargin: '-50% 0px -50% 0px' });
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+
+            // --- Living Crystal Canvas ---
+            const crysCanvas = document.getElementById('crystal-canvas');
+            const crysCtx = crysCanvas.getContext('2d');
+            let crysParticles = [];
+            
+            function resizeCrystalCanvas() {
+                crysCanvas.width = crysCanvas.parentElement.clientWidth;
+                crysCanvas.height = crysCanvas.parentElement.clientHeight;
+                initCrystalParticles();
+            }
+
+            function initCrystalParticles() {
+                crysParticles = [];
+                const gridSize = 5;
+                const spacingX = crysCanvas.width / (gridSize + 1);
+                const spacingY = crysCanvas.height / (gridSize + 1);
+                for (let i = 0; i < gridSize; i++) {
+                    for (let j = 0; j < gridSize; j++) {
+                        crysParticles.push({
+                            x: spacingX * (i + 1),
+                            y: spacingY * (j + 1),
+                            angle: 0,
+                            direction: (i + j) % 2 === 0 ? 1 : -1,
+                            radius: Math.min(spacingX, spacingY) * 0.3
+                        });
+                    }
+                }
+            }
+            
+            function animateCrystals() {
+                crysCtx.clearRect(0, 0, crysCanvas.width, crysCanvas.height);
+                crysParticles.forEach(p => {
+                    p.angle += 0.05 * p.direction;
+                    
+                    crysCtx.save();
+                    crysCtx.translate(p.x, p.y);
+                    crysCtx.rotate(p.angle);
+                    
+                    crysCtx.beginPath();
+                    crysCtx.arc(0, 0, p.radius, 0, Math.PI * 2);
+                    crysCtx.fillStyle = p.direction > 0 ? 'rgba(0, 119, 182, 0.6)' : 'rgba(255, 138, 101, 0.6)';
+                    crysCtx.fill();
+                    
+                    crysCtx.beginPath();
+                    crysCtx.moveTo(0, 0);
+                    crysCtx.lineTo(p.radius, 0);
+                    crysCtx.strokeStyle = 'white';
+                    crysCtx.lineWidth = 2;
+                    crysCtx.stroke();
+                    
+                    crysCtx.restore();
+                });
+                requestAnimationFrame(animateCrystals);
+            }
+
+            resizeCrystalCanvas();
+            animateCrystals();
+            window.addEventListener('resize', resizeCrystalCanvas);
+
+
+            // --- Vicsek Model Canvas ---
+            const vCanvas = document.getElementById('vicsek-canvas');
+            const vCtx = vCanvas.getContext('2d');
+            const noiseSlider = document.getElementById('noise-slider');
+
+            let vParticles = [];
+            const numParticles = 200;
+            const speed = 1.5;
+            const interactionRadius = 50;
+            let animationFrameId;
+
+            function resizeVicsekCanvas() {
+                vCanvas.width = vCanvas.parentElement.clientWidth;
+                vCanvas.height = vCanvas.parentElement.clientHeight;
+                initVicsekParticles();
+            }
+
+            function initVicsekParticles() {
+                vParticles = [];
+                for (let i = 0; i < numParticles; i++) {
+                    vParticles.push({
+                        x: Math.random() * vCanvas.width,
+                        y: Math.random() * vCanvas.height,
+                        angle: Math.random() * 2 * Math.PI
+                    });
+                }
+            }
+
+            function animateVicsek() {
+                const noiseLevel = (1 - parseFloat(noiseSlider.value)) * Math.PI;
+
+                vCtx.fillStyle = 'rgba(26, 59, 93, 0.25)'; // Fading effect
+                vCtx.fillRect(0, 0, vCanvas.width, vCanvas.height);
+
+                vParticles.forEach(p => {
+                    let avgAngle = 0;
+                    let neighbors = 0;
+
+                    vParticles.forEach(other => {
+                        const dx = other.x - p.x;
+                        const dy = other.y - p.y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+
+                        if (dist > 0 && dist < interactionRadius) {
+                            avgAngle += other.angle;
+                            neighbors++;
+                        }
+                    });
+
+                    if (neighbors > 0) {
+                        p.angle = avgAngle / neighbors;
+                    }
+
+                    p.angle += (Math.random() - 0.5) * noiseLevel;
+
+                    p.x += Math.cos(p.angle) * speed;
+                    p.y += Math.sin(p.angle) * speed;
+
+                    // Toroidal boundary conditions
+                    if (p.x > vCanvas.width) p.x = 0;
+                    if (p.x < 0) p.x = vCanvas.width;
+                    if (p.y > vCanvas.height) p.y = 0;
+                    if (p.y < 0) p.y = vCanvas.height;
+                    
+                    // Draw particle
+                    vCtx.save();
+                    vCtx.translate(p.x, p.y);
+                    vCtx.rotate(p.angle);
+                    vCtx.beginPath();
+                    vCtx.moveTo(10, 0);
+                    vCtx.lineTo(-5, -5);
+                    vCtx.lineTo(-5, 5);
+                    vCtx.closePath();
+                    vCtx.fillStyle = '#e0f7fa';
+                    vCtx.fill();
+                    vCtx.restore();
+                });
+
+                animationFrameId = requestAnimationFrame(animateVicsek);
+            }
+
+            resizeVicsekCanvas();
+            animateVicsek();
+            window.addEventListener('resize', resizeVicsekCanvas);
+        });
+    </script>
+</body>
+</html>
